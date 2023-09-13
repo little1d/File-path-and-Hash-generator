@@ -1,42 +1,36 @@
-<script>
+<script setup>
 import { ref } from 'vue';
-
-const file = ref(null);
-
 const files = ref([]);
-// const handleFileUpload = (event) => {
-//   file.value = event.target.files[0];
-// };
+console.log(files);
+const handleFileDrop = (e) =>{
+  //阻止默认行为 确保页面不会打开拖放的文件
+  e.preventDefault();
+  const fileList = e.dataTransfer.files;
+  for (let i = 0; i < fileList.length; i++) {
+    files.value.push(fileList[i]);
+  }
+}
 
-// const uploadFile = () => {
-//   if (file.value) {
-//     // 在这里执行文件上传的逻辑
-//     console.log("上传文件:", file.value);
-//     // 可以使用axios或其他库发送文件到服务器
-//   } else {
-//     console.log("请选择要上传的文件");
-//   }
-// };
-// ;
 </script>
 
 
 <template>
   <div class="page">
     <div class="container">
-    <!-- <input type="file" @change="handleFileUpload" />
-    <button @click="uploadFile">上传文件</button> -->
+
     <div class="header">
-      <div class="left"><h5 class="google-font">Upload file(s)</h5></div>
+      <div class="left" @drop="handleFileDrop" @dragover.prevent><h5 class="google-font">Upload file(s)</h5></div>
       <div class="right"></div>
     </div>
-      <div class="dragzone">
-        <span class="dropzone-text">Drag files/folders here or click to browse from your computer</span>
+    <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
+      <div class="dragzone" @drop="handleFileDrop" @dragover.prevent>
+        <span>Drag files/folders here or click to browse from your computer</span>
       </div>
-    <!-- 创建上传记录 -->
-    <!-- <div v-for="file in files">
-
-    </div> -->
+      <div class="outputzone">
+        <div class="show-box" v-for="file in files" :key='file.name'>{{  file.name }}
+          <div class="hashValue"></div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -55,7 +49,7 @@ const files = ref([]);
   justify-content: center;
   align-items: center;
   height: 100vh;
-  transform: scale(1.3);
+  transform: scale(1.2);
 }
 
 .container{
@@ -79,7 +73,7 @@ const files = ref([]);
   height: 50px;
   border-left: 1px solid #e5e7eb; /* 只保留左边框 */
   border-bottom: 1px solid #e5e7eb; /* 只保留下边框 */
-  background: linear-gradient(to bottom, #ffffff, #f8f9fa); /* 添加渐变色 */
+  background: linear-gradient(to bottom, #ffffff, #e1e2e3); /* 添加渐变色 */
   margin-top: -15px;
   margin-right: -15px;
 }
@@ -111,5 +105,10 @@ const files = ref([]);
 
 .dragzone:hover span{
   color: rgb(107, 114, 128);
+}
+
+.outputzone{
+  width: 200px;
+  height: 200px;
 }
 </style>
