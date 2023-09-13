@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 const files = ref([]);
-console.log(files);
-const handleFileDrop = (e) =>{
+const hashValueData = ref(['1', '2', '3']);
+
+const handleFileDrop = (e) => {
   //阻止默认行为 确保页面不会打开拖放的文件
   e.preventDefault();
   const fileList = e.dataTransfer.files;
@@ -11,6 +12,43 @@ const handleFileDrop = (e) =>{
   }
 }
 
+const traverseDirectory = (directory,parentPath) => {
+  const reader = directory.createReader();
+  reader.readEntries((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isFile) {
+        entry.file((file) => {
+          files.value.push({
+            name: file.name,
+            path: `${parentPath}/${file.name}`,
+          });
+        });
+      } else if (entry.isDirectory) {
+        traverseDirectory(entry,`${parentPath}/${entry.name}`);
+      }
+    })
+  })
+}
+
+const handleFileDrop2 = (e) => {
+  e.preventDefault();
+  const items = e.dataTransfer.items;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i].webkitGetAsEntry();
+    if (item.isFile) {
+      item.file((file) => {
+        this.files.push({
+          name: file.name,
+          path: file.webkitRelativePath,
+        });
+      });
+    } else if (item.isDirectory) {
+      traverseDirectory(item,item.name);
+    }
+  }
+}
+
+
 </script>
 
 
@@ -18,33 +56,35 @@ const handleFileDrop = (e) =>{
   <div class="page">
     <div class="container">
 
-    <div class="header">
-      <div class="left" @drop="handleFileDrop" @dragover.prevent><h5 class="google-font">Upload file(s)</h5></div>
-      <div class="right"></div>
-    </div>
-    <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
-      <div class="dragzone" @drop="handleFileDrop" @dragover.prevent>
+      <div class="header">
+        <div class="left" @drop="handleFileDrop2" @dragover.prevent>
+          <h5 class="google-font">Upload file(s)</h5>
+        </div>
+        <div class="right"></div>
+      </div>
+      <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
+      <div class="dragzone" @drop="handleFileDrop2" @dragover.prevent>
         <span>Drag files/folders here or click to browse from your computer</span>
       </div>
       <div class="outputzone">
-        <div class="show-box" v-for="file in files" :key='file.name'>{{  file.name }}
-          <div class="hashValue"></div>
+        <div class="fileInfo" v-for="file in files" :key="file.name">
+          <!-- <div class="fileName">{{ file.name }}</div> -->
+          <div class="filePath">{{ file.path }}</div>
         </div>
+
       </div>
     </div>
   </div>
-  
 </template>
 
 <style scoped>
-
-*{
+* {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-.page{
+.page {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -52,34 +92,39 @@ const handleFileDrop = (e) =>{
   transform: scale(1.2);
 }
 
-.container{
+.container {
   flex-direction: column;
   border: 2px solid #e5e7eb;
   border-radius: 0.75rem;
   padding: 1rem;
 }
 
-.header{
+.header {
   display: flex;
   margin-bottom: 1rem;
 }
+
 .left {
   cursor: pointer;
   width: 20%;
 }
 
 .right {
-  flex-grow: 1; /* 占据剩余空间 */
+  flex-grow: 1;
+  /* 占据剩余空间 */
   height: 50px;
-  border-left: 1px solid #e5e7eb; /* 只保留左边框 */
-  border-bottom: 1px solid #e5e7eb; /* 只保留下边框 */
-  background: linear-gradient(to bottom, #ffffff, #e1e2e3); /* 添加渐变色 */
+  border-left: 1px solid #e5e7eb;
+  /* 只保留左边框 */
+  border-bottom: 1px solid #e5e7eb;
+  /* 只保留下边框 */
+  background: linear-gradient(to bottom, #ffffff, #e1e2e3);
+  /* 添加渐变色 */
   margin-top: -15px;
   margin-right: -15px;
 }
 
 
-.dragzone{
+.dragzone {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -90,25 +135,25 @@ const handleFileDrop = (e) =>{
   cursor: pointer;
 }
 
-.dragzone:hover{
+.dragzone:hover {
   background-color: rgb(249 250 251);
 }
 
 
-.google-font,span{
-  font-family: 'Poppins',sans-serif;
+.google-font,
+span {
+  font-family: 'Poppins', sans-serif;
 }
 
-.dragzone span{
+.dragzone span {
   padding: 2rem;
 }
 
-.dragzone:hover span{
+.dragzone:hover span {
   color: rgb(107, 114, 128);
 }
 
-.outputzone{
+.outputzone {
   width: 200px;
   height: 200px;
-}
-</style>
+}</style>

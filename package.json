@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "hash-wasm": "^4.9.0",
     "vue": "^3.3.4"
   },
   "devDependencies": {
