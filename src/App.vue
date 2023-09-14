@@ -1,18 +1,9 @@
 <script setup>
 import { ref } from 'vue';
 import { createSHA256 } from 'hash-wasm'
+
 const files = ref([]);
-
-// async function run() {
-//   const sha1 = await createSHA256();
-//   sha1.init();
-
-//   const hash = sha1.digest('binary'); // returns Uint8Array
-//   console.log('SHA256:', hash);
-// }
-
-// run();
-
+// 处理点击事件
 const handleFileClick = () =>{
   const input = document.createElement('input');
   input.type = 'file';
@@ -23,24 +14,22 @@ const handleFileClick = () =>{
   input.click();
 }
 
-const calculateSHA256 = async (file) => {
+const calculateSHA256 =  (file) => {
   const reader = new FileReader();
   reader.onload = async (event) => {
     const fileData = event.target.result;
     const sha256 = await createSHA256();
-    sha256.init()
     const buffer = new Uint8Array(fileData);
     const hashValue =  sha256.update(buffer).digest('hex');
-    console.log(hashValue);
+    // console.log(hashValue);
     files.value.push({
       name: file.name,
-      path: file.webkitGetAsEntry,
+      path: file.path,
       hashValue: hashValue,
     })
   }
   reader.readAsArrayBuffer(file);
 }
-
 
 // 递归遍历文件夹中的文件
 const traverseDirectory = (directory, parentPath) => {
@@ -49,10 +38,8 @@ const traverseDirectory = (directory, parentPath) => {
     entries.forEach((entry) => {
       if (entry.isFile) {
         entry.file((file) => {
-          files.value.push({
-            name: file.name,
-            path: `${parentPath}/${file.name}`,
-          });
+        file.path = `${parentPath}/${file.name}`
+        calculateSHA256(file);
         });
       } else if (entry.isDirectory) {
         traverseDirectory(entry, `${parentPath}/${entry.name}`);
@@ -61,21 +48,22 @@ const traverseDirectory = (directory, parentPath) => {
   })
 }
 
-const handleFileDrop2 = async (e) => {
+const handleFileDrop = async (e) => {
   e.preventDefault();
   const items = e.dataTransfer.items;
   for (let i = 0; i < items.length; i++) {
     const item = items[i].webkitGetAsEntry();
+    // 对于单个文件调用calculateSHA256
     if (item.isFile) {
       const file = items[i].getAsFile();
       calculateSHA256(file)
     }
+    // 对于目录调用traverseDirectory
     else if (item.isDirectory) {
       traverseDirectory(item, item.name);
     }
   }
 }
-
 
 </script>
 
@@ -91,7 +79,7 @@ const handleFileDrop2 = async (e) => {
         <div class="right"></div>
       </div>
       <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
-      <div class="dragzone" @drop="handleFileDrop2" @click="handleFileClick" @dragover.prevent>
+      <div class="dragzone" @drop="handleFileDrop" @click="handleFileClick" @dragover.prevent>
         <span>Drag files/folders here or click to browse from your computer</span>
       </div>
       <div class="outputzone">
@@ -183,9 +171,6 @@ span {
   color: rgb(107, 114, 128);
 }
 
-.outputzone {
-
-}
 
 .fileInfo {
   display: flex;
@@ -193,7 +178,4 @@ span {
   align-items: center;
 }
 
-.hashValue{
-
-}
 </style>
