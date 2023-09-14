@@ -14,20 +14,29 @@ const handleFileClick = () =>{
   input.click();
 }
 
+// 定义一个计算SHA256编码的函数，接收一个文件作为参数
 const calculateSHA256 =  (file) => {
+  // 创建一个fileReader对象，用于读取文件内容 fileReader
   const reader = new FileReader();
+  // reader.onload事件，当文件读取完成时触发
   reader.onload = async (event) => {
+    // 获取文件数据
     const fileData = event.target.result;
+    // 创建CreateSHA256实例
     const sha256 = await createSHA256();
+    // 将文件数据转换为无符号8位整数数组
     const buffer = new Uint8Array(fileData);
+    // 调用update方法，将文件数据传递更新 调用digest方法，以十六进制字符串的形式获取SHA256哈希值
     const hashValue =  sha256.update(buffer).digest('hex');
     // console.log(hashValue);
+    // 将文件的名称、路径、哈希值添加到file对象中
     files.value.push({
       name: file.name,
       path: file.path,
       hashValue: hashValue,
     })
   }
+  // 最后，通过调用reader.readAsArrayBuffer(file)方法，将文件读取位ArrayBuffer
   reader.readAsArrayBuffer(file);
 }
 
