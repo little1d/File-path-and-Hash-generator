@@ -1,18 +1,39 @@
 <script setup>
 import { ref } from 'vue';
+import { createSHA256 } from 'hash-wasm'
 const files = ref([]);
-const hashValueData = ref(['1', '2', '3']);
 
-const handleFileDrop = (e) => {
-  //阻止默认行为 确保页面不会打开拖放的文件
-  e.preventDefault();
-  const fileList = e.dataTransfer.files;
-  for (let i = 0; i < fileList.length; i++) {
-    files.value.push(fileList[i]);
-  }
+async function run() {
+  const sha1 = await createSHA256();
+  sha1.init();
+
+  const hash = sha1.digest('binary'); // returns Uint8Array
+  console.log('SHA256:', hash);
 }
 
-const traverseDirectory = (directory,parentPath) => {
+// run();
+
+const calculateSHA256 = async (file) => {
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    const fileData = event.target.result;
+    const sha256 = await createSHA256();
+    sha256.init()
+    const buffer = new Uint8Array(fileData);
+    const hashValue =  sha256.update(buffer).digest('hex');
+    console.log(1);
+    files.value.push({
+      name: file.name,
+      path: file.webkitGetAsEntry,
+      hashValue: hashValue,
+    })
+  }
+  reader.readAsArrayBuffer(file);
+}
+
+
+// 递归遍历文件夹中的文件
+const traverseDirectory = (directory, parentPath) => {
   const reader = directory.createReader();
   reader.readEntries((entries) => {
     entries.forEach((entry) => {
@@ -24,26 +45,23 @@ const traverseDirectory = (directory,parentPath) => {
           });
         });
       } else if (entry.isDirectory) {
-        traverseDirectory(entry,`${parentPath}/${entry.name}`);
+        traverseDirectory(entry, `${parentPath}/${entry.name}`);
       }
     })
   })
 }
 
-const handleFileDrop2 = (e) => {
+const handleFileDrop2 = async (e) => {
   e.preventDefault();
   const items = e.dataTransfer.items;
   for (let i = 0; i < items.length; i++) {
     const item = items[i].webkitGetAsEntry();
     if (item.isFile) {
-      item.file((file) => {
-        this.files.push({
-          name: file.name,
-          path: file.webkitRelativePath,
-        });
-      });
-    } else if (item.isDirectory) {
-      traverseDirectory(item,item.name);
+      const file = items[i].getAsFile();
+      calculateSHA256(file)
+    }
+    else if (item.isDirectory) {
+      traverseDirectory(item, item.name);
     }
   }
 }
@@ -69,7 +87,8 @@ const handleFileDrop2 = (e) => {
       <div class="outputzone">
         <div class="fileInfo" v-for="file in files" :key="file.name">
           <!-- <div class="fileName">{{ file.name }}</div> -->
-          <div class="filePath">{{ file.path }}</div>
+          <div class="filePath">{{ file.path }} </div>
+          <div class="hashValue">{{ file.hashValue }}</div>
         </div>
 
       </div>
@@ -156,4 +175,10 @@ span {
 .outputzone {
   width: 200px;
   height: 200px;
-}</style>
+}
+
+.fileInfo {
+  display: flex;
+  justify-content: space-around;
+}
+</style>
