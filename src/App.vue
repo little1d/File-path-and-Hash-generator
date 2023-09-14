@@ -3,15 +3,25 @@ import { ref } from 'vue';
 import { createSHA256 } from 'hash-wasm'
 const files = ref([]);
 
-async function run() {
-  const sha1 = await createSHA256();
-  sha1.init();
+// async function run() {
+//   const sha1 = await createSHA256();
+//   sha1.init();
 
-  const hash = sha1.digest('binary'); // returns Uint8Array
-  console.log('SHA256:', hash);
-}
+//   const hash = sha1.digest('binary'); // returns Uint8Array
+//   console.log('SHA256:', hash);
+// }
 
 // run();
+
+const handleFileClick = () =>{
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.addEventListener('change',(event)=>{
+    const file = event.target.files[0];
+    calculateSHA256(file);
+  })
+  input.click();
+}
 
 const calculateSHA256 = async (file) => {
   const reader = new FileReader();
@@ -21,7 +31,7 @@ const calculateSHA256 = async (file) => {
     sha256.init()
     const buffer = new Uint8Array(fileData);
     const hashValue =  sha256.update(buffer).digest('hex');
-    console.log(1);
+    console.log(hashValue);
     files.value.push({
       name: file.name,
       path: file.webkitGetAsEntry,
@@ -81,12 +91,12 @@ const handleFileDrop2 = async (e) => {
         <div class="right"></div>
       </div>
       <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
-      <div class="dragzone" @drop="handleFileDrop2" @dragover.prevent>
+      <div class="dragzone" @drop="handleFileDrop2" @click="handleFileClick" @dragover.prevent>
         <span>Drag files/folders here or click to browse from your computer</span>
       </div>
       <div class="outputzone">
         <div class="fileInfo" v-for="file in files" :key="file.name">
-          <!-- <div class="fileName">{{ file.name }}</div> -->
+          <div class="fileName">{{ file.name }}</div>
           <div class="filePath">{{ file.path }} </div>
           <div class="hashValue">{{ file.hashValue }}</div>
         </div>
@@ -106,12 +116,13 @@ const handleFileDrop2 = async (e) => {
 .page {
   display: flex;
   justify-content: center;
-  align-items: center;
+  width: 100vw;
   height: 100vh;
-  transform: scale(1.2);
+  transform: scale(1);
 }
 
 .container {
+  width: 100%;
   flex-direction: column;
   border: 2px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -173,12 +184,16 @@ span {
 }
 
 .outputzone {
-  width: 200px;
-  height: 200px;
+
 }
 
 .fileInfo {
   display: flex;
   justify-content: space-around;
+  align-items: center;
+}
+
+.hashValue{
+
 }
 </style>
