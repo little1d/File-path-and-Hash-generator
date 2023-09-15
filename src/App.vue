@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import { createSHA256 } from 'hash-wasm'
 
 const progress = ref(0);
-const uploadProgress = ref(0);//添加uploadProgress响应式数据
 const files = ref([]);
 // 处理点击事件
 const handleFileClick = () => {
@@ -79,10 +78,11 @@ const handleFileDrop = async (e) => {
 }
 
 // 监听文件上传进度
-const handleUploadProgress = (event) => {
+const handleUploadProgress = (event,file) => {
   if (event.lengthComputable) {
     const percent = Math.round((event.loaded / event.total) * 100);
     progress.value = percent;
+    file.uploadProgress = percent;
   }
 }
 </script>
@@ -104,14 +104,16 @@ const handleUploadProgress = (event) => {
         <span>Drag files/folders here or click to browse from your computer</span>
       </div>
       <div class="outputzone">
-        <div class="fileInfo" v-for="file in files" :key="file.name">
-          <div class="fileName">{{ file.name }}</div>
-          <div class="filePath">{{ file.path }} </div>
-          <div class="hashValue">{{ file.hashValue }}</div>
+        <div class="fileInfo google-font" v-for="file in files" :key="file.name">
+          <div class="fileName google-font">{{ file.name }}</div>
+          <div class="filePath google-font">{{ file.path }} </div>
+          <!-- 显示哈希值的前8位 -->
+          <div class="hashValue">{{ file.hashValue.substring(0, 8) }}</div>
+          <div class="progress-bar" v-if="progress > 0 && progress < 100"> >
+            <div class="progress" :style="{ width: file.handleUploadProgress + '%' }"></div>
+          </div>
         </div>
-        <div class="progress-bar" v-if="progress > 0 && progress < 100"> >
-          <div class="progress" :style="{ width: progress + '%' }"></div>
-        </div>
+
       </div>
     </div>
   </div>
@@ -122,18 +124,22 @@ const handleUploadProgress = (event) => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden;
+
 }
 
 .page {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100vw;
   height: 100vh;
   transform: scale(1);
 }
 
 .container {
-  width: 100%;
+  display: flex;
+  width: 50%;
   flex-direction: column;
   border: 2px solid #e5e7eb;
   border-radius: 0.75rem;
@@ -153,15 +159,13 @@ const handleUploadProgress = (event) => {
 .right {
   flex-grow: 1;
   /* 占据剩余空间 */
-  height: 50px;
   border-left: 1px solid #e5e7eb;
   /* 只保留左边框 */
   border-bottom: 1px solid #e5e7eb;
   /* 只保留下边框 */
   background: linear-gradient(to bottom, #ffffff, #e1e2e3);
   /* 添加渐变色 */
-  margin-top: -15px;
-  margin-right: -15px;
+  margin-bottom: -1rem;
 }
 
 
@@ -214,5 +218,11 @@ span {
   background-color: #4b5563;
   border-radius: 5px;
   transition: width 0.3s ease-in-out;
+}
+
+.fileInfo {
+  margin: 1rem;
+  border: 2px dashed #cfd3db;
+  border-radius: 20px;
 }
 </style>
