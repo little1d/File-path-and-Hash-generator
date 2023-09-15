@@ -2,20 +2,23 @@
 import { ref } from 'vue';
 import { createSHA256 } from 'hash-wasm'
 
+const progress = ref(0);
+const uploadProgress = ref(0);//添加uploadProgress响应式数据
 const files = ref([]);
 // 处理点击事件
-const handleFileClick = () =>{
+const handleFileClick = () => {
   const input = document.createElement('input');
   input.type = 'file';
-  input.addEventListener('change',(event)=>{
+  input.addEventListener('change', (event) => {
     const file = event.target.files[0];
     calculateSHA256(file);
   })
   input.click();
+  handleUploadProgress();
 }
 
 // 定义一个计算SHA256编码的函数，接收一个文件作为参数
-const calculateSHA256 =  (file) => {
+const calculateSHA256 = (file) => {
   // 创建一个fileReader对象，用于读取文件内容 fileReader
   const reader = new FileReader();
   // reader.onload事件，当文件读取完成时触发
@@ -27,7 +30,7 @@ const calculateSHA256 =  (file) => {
     // 将文件数据转换为无符号8位整数数组
     const buffer = new Uint8Array(fileData);
     // 调用update方法，将文件数据传递更新 调用digest方法，以十六进制字符串的形式获取SHA256哈希值
-    const hashValue =  sha256.update(buffer).digest('hex');
+    const hashValue = sha256.update(buffer).digest('hex');
     // console.log(hashValue);
     // 将文件的名称、路径、哈希值添加到file对象中
     files.value.push({
@@ -47,8 +50,8 @@ const traverseDirectory = (directory, parentPath) => {
     entries.forEach((entry) => {
       if (entry.isFile) {
         entry.file((file) => {
-        file.path = `${parentPath}/${file.name}`
-        calculateSHA256(file);
+          file.path = `${parentPath}/${file.name}`
+          calculateSHA256(file);
         });
       } else if (entry.isDirectory) {
         traverseDirectory(entry, `${parentPath}/${entry.name}`);
@@ -72,8 +75,16 @@ const handleFileDrop = async (e) => {
       traverseDirectory(item, item.name);
     }
   }
+  handleUploadProgress(e);
 }
 
+// 监听文件上传进度
+const handleUploadProgress = (event) => {
+  if (event.lengthComputable) {
+    const percent = Math.round((event.loaded / event.total) * 100);
+    progress.value = percent;
+  }
+}
 </script>
 
 
@@ -82,12 +93,13 @@ const handleFileDrop = async (e) => {
     <div class="container">
 
       <div class="header">
-        <div class="left" @drop="handleFileDrop2" @dragover.prevent>
+        <div class="left" @drop="handleFileDrop" @dragover.prevent>
           <h5 class="google-font">Upload file(s)</h5>
         </div>
         <div class="right"></div>
       </div>
       <!-- 当拖拽事件发生后，执行handleFileDrop函数逻辑 并阻止默认拖动行为-->
+      <!-- 合并成同一个处理器函数 同时处理进度条与主业务 -->
       <div class="dragzone" @drop="handleFileDrop" @click="handleFileClick" @dragover.prevent>
         <span>Drag files/folders here or click to browse from your computer</span>
       </div>
@@ -97,7 +109,9 @@ const handleFileDrop = async (e) => {
           <div class="filePath">{{ file.path }} </div>
           <div class="hashValue">{{ file.hashValue }}</div>
         </div>
-
+        <div class="progress-bar" v-if="progress > 0 && progress < 100"> >
+          <div class="progress" :style="{ width: progress + '%' }"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -187,4 +201,18 @@ span {
   align-items: center;
 }
 
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: #e5e7eb;
+  border-radius: 5px;
+  margin-top: 1rem;
+}
+
+.progress {
+  height: 100%;
+  background-color: #4b5563;
+  border-radius: 5px;
+  transition: width 0.3s ease-in-out;
+}
 </style>
