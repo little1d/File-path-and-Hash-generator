@@ -1,7 +1,6 @@
-# Vue 3 + Vite
+网页上传文件并编码，使用Vue.js编写一个网页，实现点击/拖拽 上传文件/文件夹
+拖拽文件显示路径，并生成唯一的哈希值
+不需要实际上传到后端，主要是在前端获取到文件
+“Drag and drop a file to display its path and generate a unique hash value.
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+<img width="704" alt="image" src="https://github.com/little1d/task_2/assets/115958756/f2571cf4-02b3-43f3-9875-ea537f005ccb">
